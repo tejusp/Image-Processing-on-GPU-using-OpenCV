@@ -16,11 +16,11 @@
 using namespace std;
 using std::cout;
 
-#define arraySIZE 240
+//#define arraySIZE 240
 
-__shared__ int edgesValues[10][24];
+__device__ int edgesValues[480][640];
 __shared__ int counter;
-__constant__ const int maxContourPoints = 30;
+__constant__ const int maxContourPoints = 300;
 
 __global__ void funcKernel(const float* srcptr, float* dstptr, size_t srcstep,
 		const size_t dststep, int cols, int rows, int* inputArray_d,
@@ -96,7 +96,7 @@ __global__ void funcKernel2(const float* srcptr, float* dstptr, size_t srcstep,
 //	printf("\nat row=%d col=%d inp array=%d ", rowInd, colInd,
 //			inputArray_d[rowInd * cols + colInd]);
 //	__shared__ int test[240];
-	int contourVal[maxContourPoints][2];
+//	int contourVal[maxContourPoints][2];
 	counter = 0;
 	int maxRow = 0;
 	int minRow = rows;
@@ -117,59 +117,65 @@ __global__ void funcKernel2(const float* srcptr, float* dstptr, size_t srcstep,
 				if (j > maxCol) {
 					maxCol = j;
 				}
-				contourVal[counter][1] = i;
-				contourVal[counter][2] = j;
-				printf("%d - test contour at %d,%d is %d \n", counter, i, j,
-						edgesValues[i][j]);
+//				contourVal[counter][1] = i;
+//				contourVal[counter][2] = j;
+//				printf("%d - test contour at %d,%d is %d \n", counter, i, j,
+//						edgesValues[i][j]);
 				counter++;
 
 			}
 		}
 	}
+
+//	for (int i = counter; i < rows; i++) {
+//		contourVal[counter][0] = 0;
+//		contourVal[counter][1] = 0;
+//	}
 
 	int centroidRow = (minRow + maxRow) / 2;
 	int centroidCol = (minCol + maxCol) / 2;
-	printf(
-			"minRow=%d,maxRow=%d,minCol=%d,maxCol=%d,centroidRow=%d,centroidCol=%d",
-			minRow, maxRow, minCol, maxCol, centroidRow, centroidCol);
+	printf("%d,%d\n", centroidRow, centroidCol);
+//	printf(
+//			"minRow=%d,maxRow=%d,minCol=%d,maxCol=%d,centroidRow=%d,centroidCol=%d",
+//			minRow, maxRow, minCol, maxCol, centroidRow, centroidCol);
 
 }
 
-__global__ void funcKernel3(const float* srcptr, float* dstptr, size_t srcstep,
-		const size_t dststep, int cols, int rows, int* inputArray_d,
-		int* outputArray_d) {
-
-	int rowInd = blockIdx.y * blockDim.y + threadIdx.y;
-	int colInd = blockIdx.x * blockDim.x + threadIdx.x;
-	if (rowInd >= rows || colInd >= cols)
-		return;
-//	const float* rowsrcptr = (const float *) (((char *) srcptr)
-//			+ rowInd * srcstep);
-//	float* rowdstPtr = (float *) (((char *) dstptr) + rowInd * dststep);
-//	printf("\nat row=%d col=%d inp array=%d ", rowInd, colInd,
-//			inputArray_d[rowInd * cols + colInd]);
-//	__shared__ int test[240];
-
-	if (counter < 50) {
-		__shared__ int contourPoints[20];
-	} else if (counter < 100) {
-		__shared__ int contourPoints[100];
-	} else if (counter < 150) {
-		__shared__ int contourPoints[20];
-	} else if (counter < 200) {
-		__shared__ int contourPoints[100];
-	}
-	for (int i = 0; i < rows; i++) {
-		for (int j = 0; j < cols; j++) {
-			if (edgesValues[i][j] == 1) {
-				counter++;
-				printf("%d - test contour at %d,%d is %d \n", counter, i, j,
-						edgesValues[i][j]);
-			}
-		}
-	}
-
-}
+//__global__ void funcKernel3(const float* srcptr, float* dstptr, size_t srcstep,
+//		const size_t dststep, int cols, int rows, int* inputArray_d,
+//		int* outputArray_d) {
+//
+//	int rowInd = blockIdx.y * blockDim.y + threadIdx.y;
+//	int colInd = blockIdx.x * blockDim.x + threadIdx.x;
+//	if (rowInd >= rows || colInd >= cols)
+//		return;
+////	const float* rowsrcptr = (const float *) (((char *) srcptr)
+////			+ rowInd * srcstep);
+////	float* rowdstPtr = (float *) (((char *) dstptr) + rowInd * dststep);
+////	printf("\nat row=%d col=%d inp array=%d ", rowInd, colInd,
+////			inputArray_d[rowInd * cols + colInd]);
+////	__shared__ int test[240];
+//
+//	if (counter < 50) {
+//		__shared__ int contourPoints[20];
+//	} else if (counter < 100) {
+//		__shared__ int contourPoints[100];
+//	} else if (counter < 150) {
+//		__shared__ int contourPoints[20];
+//	} else if (counter < 200) {
+//		__shared__ int contourPoints[100];
+//	}
+//	for (int i = 0; i < rows; i++) {
+//		for (int j = 0; j < cols; j++) {
+//			if (edgesValues[i][j] == 1) {
+//				counter++;
+//				printf("%d - test contour at %d,%d is %d \n", counter, i, j,
+//						edgesValues[i][j]);
+//			}
+//		}
+//	}
+//
+//}
 
 int divUp(int a, int b) {
 	return (a + b - 1) / b;
@@ -206,7 +212,7 @@ void func(const float* srcptr, float* dstptr, size_t srcstep,
 
 	cudaMemcpy(inputArray_d, inputArray_h, ARRAY_BYTES, cudaMemcpyHostToDevice);
 
-	std::cout << "calling kernel from func\n";
+//	std::cout << "calling kernel from func\n";
 	funcKernel<<<grDim, blDim>>>(srcptr, dstptr, srcstep, dststep, cols, rows,
 			inputArray_d, outputArray_d);
 	cudaDeviceSynchronize();
@@ -220,7 +226,7 @@ void func(const float* srcptr, float* dstptr, size_t srcstep,
 //		cout << "host: " << edgesValues[0] << endl;
 //	}
 
-	cout << "\n\nstarting output in host" << endl;
+//	cout << "\n\nstarting output in host" << endl;
 
 //	for (int i = rows * cols - 1; i >= 0; i--)
 //		cout << "==" << (int) outputArray_h[i];
