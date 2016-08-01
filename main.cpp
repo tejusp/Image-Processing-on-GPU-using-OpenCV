@@ -71,6 +71,7 @@ void callKernel(const cv::gpu::GpuMat &src, cv::gpu::GpuMat &dst) {
 }
 
 int findCentroidFromImage(cv::Mat src, int *pX, int *pY, int *pArea) {
+	cout << "size=" << sizeof(bool);
 	//GPU Mat... Copy from CPU memory to GPU memory...
 	cv::gpu::GpuMat gpu_src(src);
 	cout << "\nsrc\n " << src << endl;
@@ -88,7 +89,7 @@ int findCentroidFromImage(cv::Mat src, int *pX, int *pY, int *pArea) {
 	matAfterThreshold.convertTo(floatMatForKernel, CV_32FC1);
 	callKernel(floatMatForKernel, gpu_src);
 	//Copy from GPU memory to CPU memory...
-	cv::Mat cpu_src(matAfterThreshold);
+	cv::Mat cpu_src(gpu_src);
 	cout << "\nafter thr=\n" << cpu_src << endl;
 
 	vector<vector<Point> > contours;
